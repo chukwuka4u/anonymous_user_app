@@ -1,11 +1,17 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+import Join from "../components/Join.astro";
+import Layout from "../layouts/Layout.astro";
 
 // Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
 // Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+
+const adminId = Astro.url.searchParams.get("aid");
+const queueId = Astro.url.searchParams.get("pid");
 ---
 
 <Layout>
-	<Welcome />
+  <Join adminId={adminId} queueId={queueId} />
 </Layout>
+
+<!-- http://localhost:3000/api/v1/user/anonymous/67c31d3485f5ce8ae3d65c52/get_queue?admin_id=67a6361bcb1c476befe27dfe
+http://localhost:3000/api/v1/user/anonymous/67c31d3485f5ce8ae3d65c52/anonymous_join?admin_id=67a6361bcb1c476befe27dfe -->
