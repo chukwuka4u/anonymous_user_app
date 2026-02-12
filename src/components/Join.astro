@@ -1,12 +1,9 @@
 ---
 const {adminId, queueId} = Astro.props;
-const res = await fetch(`http://localhost:3000/api/v1/user/anonymous/${queueId}/get_queue?admin_id=${adminId}`);
+const res = await fetch(`https://queue-api-48vb.onrender.com/api/v1/user/anonymous/${queueId}/get_queue?admin_id=${adminId}`);
 console.log(adminId, queueId)
 const queue = await res.json();
 console.log(queue)
-
-const user = await Astro.session?.get("user");
-console.log(user)
 ---
 <script>
   const user = localStorage.getItem("user")
@@ -18,15 +15,22 @@ console.log(user)
     //we will still get replaced because nothing is changing the ended_at key
 </script>
 <script >
-  import { joinQueue } from "../utils/requests"
+  import { getQueue, joinQueue } from "../utils/requests"
 
   const button = document.getElementById("join-btn")
   const dialog = document.querySelector("#join-action") as HTMLDialogElement
   const clsbtn = document.querySelector("#close-btn")
-
   const el = document.getElementById("container")
   const queueId = el?.dataset.queueId
   const adminId = el?.dataset.adminId
+  
+  const queue = await getQueue(adminId, queueId)
+  const addressEl = document.querySelector("#address")
+  const currentCapEl = document.querySelector("#curr-cap")
+  const totCapEl = document.querySelector("#tot-cap")
+  addressEl!.textContent = queue[0].address && "ADDRESS"
+  currentCapEl!.textContent = queue[0].current_capacity
+  totCapEl!.textContent = queue[0].queue_capacity
   
   async function handleJoin() {
     const data = await joinQueue(adminId, queueId)
@@ -63,11 +67,11 @@ console.log(user)
     </div>
 
     <div class="queue-card">
-      <h2>Current Queue Status</h2>
+      <h2 id="address">Address</h2>
       <div class="queue-details">
         <div class="detail">
           <span>People in Queue</span>
-          <strong>18</strong>
+          <strong id="curr-cap">--</strong>
         </div>
         <div class="detail">
           <span>Your Position</span>
@@ -75,11 +79,11 @@ console.log(user)
         </div>
         <div class="detail">
           <span>Estimated Wait</span>
-          <strong>25 mins</strong>
+          <strong>--</strong>
         </div>
         <div class="detail">
-          <span>Now Serving</span>
-          <strong>#42</strong>
+          <span>Total Capacity</span>
+          <strong id="tot-cap">--</strong>
         </div>
       </div>
       <button class="join-btn" id="join-btn" >Join Queue</button>
@@ -89,7 +93,7 @@ console.log(user)
   <footer>© 2026 Waitwise. Virtual queueing made simple.</footer>
   <dialog id="join-action">
     <div>
-      <p>Join queue</p>
+      <p>Success</p>
       <button id="close-btn">close the modal</button>
     </div>
   </dialog>

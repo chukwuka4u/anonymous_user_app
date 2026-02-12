@@ -5,30 +5,41 @@ import Layout from "../layouts/Layout.astro";
 <script>
   const usrStr = localStorage.getItem("user");
   const user = usrStr && JSON.parse(usrStr);
-  console.log(user);
 
   import { getQueue, leaveQueue } from "../utils/requests";
 
-  const button = document.getElementById("join-btn")
-  const dialog = document.querySelector("#join-action") as HTMLDialogElement
+  const button = document.getElementById("leave-btn")
+  const dialog = document.querySelector("#leave-action") as HTMLDialogElement
   const clsbtn = document.querySelector("#close-btn")
   
+  const queue = await getQueue(user.admin_id, user.queue_id)
+  
+  const addressEl = document.querySelector("#address")
+  const currentCapEl = document.querySelector("#curr-cap")
+  const totalCapEl = document.querySelector("#tot-cap")
   const positionel = document.querySelector("#position")
-  positionel!.textContent = user.position
+  const estWaitEl = document.querySelector("#est-wait")
 
+  positionel!.textContent = user.position
+  addressEl!.textContent = queue[0].address
+  currentCapEl!.textContent = queue[0].current_capacity
+  totalCapEl!.textContent = queue[0].queue_capacity
+
+  const estimatedWait = queue[0].average_service_time == null ? (3 * Number(user.position)) : (Number(queue[0].average_service_time) * Number(user.position))
+  
+  estWaitEl!.textContent = `${estimatedWait} mins`
+  
   async function handleLeave() {
     const data = await leaveQueue(user.admin_id, user.queue_id, user.user_id)
-    //Store the data gotten, to be removed after your served
-    localStorage.removeItem("user")
-
-    console.log(data)
+    
     dialog?.showModal()
   }
   
   button?.addEventListener("click", handleLeave)
   clsbtn?.addEventListener("click", () => {
-    window.location.replace("/queue-member")
     dialog?.close()
+    window.location.replace(`/?pid=${user.queue_id}&aid=${user.admin_id}`)
+    localStorage.removeItem("user")
   })
 </script>
 
@@ -48,11 +59,11 @@ import Layout from "../layouts/Layout.astro";
     </div>
     
     <div class="queue-card">
-        <h2>Current Queue Status</h2>
+        <h2 id="address">Address</h2>
       <div class="queue-details">
         <div class="detail">
           <span>People in Queue</span>
-          <strong>18</strong>
+          <strong id="curr-cap">--</strong>
         </div>
         <div class="detail">
           <span>Your Position</span>
@@ -60,11 +71,11 @@ import Layout from "../layouts/Layout.astro";
         </div>
         <div class="detail">
             <span>Estimated Wait</span>
-            <strong>25 mins</strong>
+            <strong id="est-wait">--</strong>
         </div>
         <div class="detail">
-            <span>Now Serving</span>
-            <strong>#42</strong>
+            <span>Total Capacity</span>
+            <strong id="tot-cap">--</strong>
         </div>
     </div>
     <button class="leave-btn" id="leave-btn" >Leave Queue</button>
@@ -74,7 +85,7 @@ import Layout from "../layouts/Layout.astro";
 <footer>© 2026 Waitwise. Virtual queueing made simple.</footer>
   <dialog id="leave-action">
       <div>
-          <p>leave queue</p>
+          <p>You've left the queue!</p>
           <button id="close-btn">close the modal</button>
         </div>
     </dialog>
