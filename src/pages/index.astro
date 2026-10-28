@@ -1,4 +1,5 @@
 ---
+import AppHeader from "../components/AppHeader.astro";
 import Join from "../components/Join.astro";
 import Layout from "../layouts/Layout.astro";
 
@@ -9,7 +10,8 @@ const adminId = Astro.url.searchParams.get("aid");
 const queueId = Astro.url.searchParams.get("pid");
 ---
 
-<Layout>
+<Layout title="WaitWise">
+  <AppHeader appName="WaitWise" location="Main Queue • Live" hasNotifications />
   <Join adminId={adminId} queueId={queueId} />
 </Layout>
 

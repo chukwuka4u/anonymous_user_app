@@ -1,0 +1,280 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  inLine: string;
+  averageServiceTime: any;
+  flowRate: string;
+  adminId: string;
+  queueId: string;
+}
+const { inLine, averageServiceTime, flowRate, adminId, queueId } = Astro.props;
+
+console.log(adminId, queueId);
+---
+
+<section
+  class="card"
+  id="container"
+  data-queue-id={queueId}
+  data-admin-id={adminId}
+  data-avg-service-time={averageServiceTime}
+>
+  <div class="position">
+    <span class="position-number">
+      <span class="hash">#</span>--
+    </span>
+    <span class="position-label">position</span>
+  </div>
+
+  <dl class="metrics">
+    <div>
+      <dt>In Line</dt>
+      <dd>{inLine} people in line</dd>
+    </div>
+    <div>
+      <dt>Est. Wait</dt>
+      <dd id="est-wait">N/A mins</dd>
+    </div>
+    <div>
+      <dt>Flow Rate</dt>
+      <dd class="flow">
+        <Icon name="mdi:trending-up" />
+        {flowRate}
+      </dd>
+    </div>
+  </dl>
+
+  <button class="join" id="join-btn" type="button">
+    <span class="state state-default">
+      <Icon name="mdi:ticket-confirmation-outline" />
+      Join Remote Queue
+    </span>
+    <span class="state state-joined">
+      <Icon name="mdi:check" />
+      Leave Remote Queue
+    </span>
+  </button>
+</section>
+<dialog id="join-status" class="dialog-container">
+  <div class="dialog">
+    <div>
+      <div>
+        <Icon name="mdi:check" />
+        <span class="dialog-text"> You're in the queue </span>
+      </div>
+      <button id="close-btn" class="dialog-btn">close</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  import { joinQueue, leaveQueue } from "../utils/requests";
+
+  const btn = document.getElementById("join-btn") as HTMLButtonElement | null;
+
+  const userStr = localStorage.getItem("user");
+  const user = userStr && JSON.parse(userStr);
+
+  const joined = user ? true : false;
+  btn?.setAttribute("aria-pressed", String(joined));
+
+  //changing attributes depending on whether joined is true or false
+  btn?.setAttribute("aria-pressed", String(joined));
+  btn!.querySelector<HTMLElement>(".state-default")!.hidden = joined === true;
+  btn!.querySelector<HTMLElement>(".state-joined")!.hidden = joined === false;
+
+  const position = document.querySelector(".position-number");
+  position!.textContent = user ? `#${user.position}` : "#--";
+
+  const estWaitEl = document.querySelector("#est-wait");
+  const el = document.getElementById("container");
+
+  const averageServiceTime = el?.dataset.avgServiceTime;
+  const estimatedWait = user
+    ? averageServiceTime == null
+      ? 3 * Number(user?.position || 1)
+      : Number(averageServiceTime) * Number(user?.position)
+    : "N/A";
+
+  estWaitEl!.textContent = `wait time is about ${estimatedWait} mins`;
+  /*
+    admin_id: "67a6361bcb1c476befe27dfe"
+    created_at: "2026-10-19T19:18:33.967Z"
+    ended_at: null
+    position: 29
+    queue_id: "67c31d3485f5ce8ae3d65c52"
+    service_duration: null
+    started_at: null
+    status: "waiting"
+    updated_at: "2026-10-19T19:18:33.967Z"
+    user_id: "652723535371691133099377"
+    _id: "6ad66d09f2e395060254d2a7"
+    */
+
+  const queueId = el?.dataset.queueId;
+  const adminId = el?.dataset.adminId;
+
+  const dialog = document.querySelector(
+    "#join-status",
+  ) as HTMLDialogElement | null;
+  const dialogText = document.querySelector(
+    ".dialog-text",
+  ) as HTMLElement | null;
+
+  btn?.addEventListener("click", async () => {
+    console.log(queueId, adminId);
+
+    if (user) {
+      console.log("Leaving the queue...");
+
+      const res = await leaveQueue(adminId, queueId, user.user_id);
+      // remove the stored user data from local storage after leaving the queue
+      try {
+        localStorage.removeItem("user");
+      } catch (e: any) {
+        console.error(e.message);
+      } finally {
+        dialogText!.textContent = "You have left the queue.";
+        if (res) dialog?.showModal();
+      }
+    } else {
+      console.log("Joining the queue...");
+
+      const res = await joinQueue(adminId, queueId);
+      // Store the data gotten, to be removed after your served
+      try {
+        localStorage.setItem("user", JSON.stringify(res));
+      } catch (e: any) {
+        console.error(e.message);
+      } finally {
+        if (res) dialog?.showModal();
+      }
+    }
+
+    window.location.reload();
+  });
+</script>
+
+<style>
+  .card {
+    margin: 24px 8px 0;
+    padding: 32px 24px 24px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    flex-grow: 1;
+    gap: 2rem;
+  }
+
+  .dialog-container {
+    margin: 0;
+    padding: 32px 24px 24px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    width: calc(100% - 32px);
+    max-width: 500px;
+    font-size: 16px;
+  }
+
+  .dialog-button {
+    margin-top: 16px;
+    padding: 8px 16px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+
+  .position {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    margin: 24px auto 40px;
+    line-height: 1;
+  }
+  .position-number {
+    font-size: clamp(72px, 24vw, 96px);
+    font-weight: 400;
+  }
+  .hash {
+    font-size: 0.4em;
+    font-weight: 700;
+    margin-right: 2px;
+  }
+  .position-label {
+    font-size: 16px;
+    margin-top: 2px;
+  }
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(1, 3fr);
+    gap: 8px;
+    margin: 0 0 24px;
+    padding-inline: 8px;
+  }
+  .metrics div {
+    min-width: 0;
+  }
+  dt,
+  dd {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.5;
+    font-weight: 500;
+  }
+  dt {
+    color: var(--accent);
+  }
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .flow :global(svg) {
+    width: 16px;
+    height: 16px;
+  }
+  .join {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border: 0;
+    border-radius: 12px;
+    background: #fbfafe;
+    box-shadow: 0 1px 3px rgba(30, 20, 60, 0.1);
+    color: var(--ink);
+    font: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .join:hover {
+    background: #f1effa;
+  }
+  .join[aria-pressed="true"] {
+    background: var(--accent);
+    color: #fff;
+  }
+  .state {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .state[hidden] {
+    display: none;
+  }
+  .state :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+</style>

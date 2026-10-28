@@ -1,0 +1,83 @@
+---
+import { Image } from "astro:assets";
+import { Icon } from "astro-icon/components";
+import logo from "../../public/favicon.svg";
+
+interface Props {
+  appName: string;
+  location: string;
+  hasNotifications?: boolean;
+}
+const { appName, location, hasNotifications = false } = Astro.props;
+---
+
+<header class="header">
+  <div class="brand">
+    <img src={logo.src} class="brand-icon" />
+    <div>
+      <p class="location">{location}</p>
+    </div>
+  </div>
+
+  <div class="actions"></div>
+</header>
+
+<style>
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-icon {
+    height: 50px;
+    width: 150px;
+  }
+  .app-name,
+  .location {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 400;
+  }
+  .actions {
+    display: flex;
+    gap: 16px;
+  }
+  .icon-btn {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+    border-radius: 50%;
+  }
+  .icon-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+  .icon-btn :global(svg) {
+    width: 24px;
+    height: 24px;
+  }
+  .dot {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    background: #dfe7ff;
+  }
+</style>

@@ -1,0 +1,62 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  name: string;
+  address: string;
+  distance?: string;
+}
+const { name, address } = Astro.props;
+---
+
+<section class="hub">
+  <Icon name="mdi:bank-outline" class="hub-icon" />
+  <div class="hub-text">
+    <p class="hub-name">{name}</p>
+    <p class="hub-address">
+      {address}
+    </p>
+  </div>
+</section>
+
+<style>
+  .hub {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 0 8px;
+    padding: 18px 16px;
+    background: var(--card);
+    border-radius: 0 0 var(--radius) var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .hub-icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+  }
+  .hub-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .hub-name,
+  .hub-address {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .hub-name {
+    font-size: clamp(32px, 10vw, 46px);
+    line-height: 1;
+    font-weight: 400;
+    font-style: bold;
+  }
+  .hub-address {
+    overflow: visible;
+    text-wrap: inherit;
+  }
+  .hub-distance {
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+</style>

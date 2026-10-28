@@ -3,9 +3,15 @@ import { defineConfig } from 'astro/config';
 
 import vercel from "@astrojs/vercel";
 
+import icon from "astro-icon";
+
 // https://astro.build/config
 export default defineConfig({
   output: "server",
-
   adapter: vercel(),
+  integrations: [
+    icon({
+      iconDir: undefined, // <-- Add this line to turn off local folder scanning
+    }),
+  ],
 });
